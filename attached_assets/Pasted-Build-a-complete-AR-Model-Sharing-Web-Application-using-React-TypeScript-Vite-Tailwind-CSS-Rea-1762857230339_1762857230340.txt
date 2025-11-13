@@ -1,0 +1,167 @@
+Build a complete AR Model Sharing Web Application using React + TypeScript + Vite, Tailwind CSS, React Router, React Query, Firebase (Auth/Firestore/Storage), @google/model-viewer, react-hot-toast, react-qr-code, Recharts. Follow these steps exactly, creating a clean, modular project without hardcoding file paths; choose sensible names and structure (e.g., folders like components, pages, services, hooks, types) as you implement.
+
+Initialize the project
+
+Create a Vite React + TypeScript app.
+
+Install dependencies: firebase, react-router-dom, @google/model-viewer, tailwindcss, @headlessui/react, react-hot-toast, @tanstack/react-query, recharts, react-qr-code, html2canvas.
+
+Configure Tailwind (PostCSS config, Tailwind config, base styles).
+
+Add an .env.example with keys: VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, VITE_FIREBASE_STORAGE_BUCKET, VITE_FIREBASE_MESSAGING_SENDER_ID, VITE_FIREBASE_APP_ID.
+
+Set up routing shell (Router + routes) and QueryClientProvider wrapper. Create placeholder pages for Login and Dashboard. Ensure npm run dev works.
+
+Initialize project structure (no fixed paths)
+
+Create a modular structure with folders for UI components, feature components (Upload, ModelViewer, QRCode, Dashboard, Sharing), pages, services (Firebase, upload, validation, QR, analytics), hooks, and types.
+
+Create minimal placeholder components for Header, Sidebar, File Uploader, Model Preview, and basic pages for Login, Dashboard, Upload, Share Manager, Analytics, AR Viewer.
+
+Ensure routing covers /login, /dashboard, /upload, /share, /analytics, /ar.
+
+Firebase configuration
+
+Create a Firebase initialization module that reads import.meta.env.VITE_* values, initializes the app once, and exports instances for Auth, Firestore, and Storage.
+
+Add optional environment typings to enable IntelliSense for VITE_* keys.
+
+Wire the app so authenticated routes are protected (redirect unauthenticated users to Login).
+
+Authentication (Login page)
+
+Implement Firebase Auth (Email/Password and Google sign-in).
+
+Show success/error toasts.
+
+On successful login, navigate to the Dashboard.
+
+Add a Sign Out action in the header.
+
+Dashboard layout
+
+Build a responsive layout using Tailwind + Headless UI: sidebar navigation (Dashboard, Upload, Shared Links, Analytics) and a top header showing user info and sign out.
+
+On the Dashboard page, show stat cards: total models, active share links, storage usage, QR scans (placeholder), and placeholders for Models list, Shared links list, and Recent Activity timeline.
+
+Fetch data via React Query from Firestore (stub where data isn’t ready yet).
+
+Model upload service
+
+Implement a service that uploads .glb/.gltf files to Firebase Storage at a unique path (include user identity and timestamp).
+
+Return metadata (URL, filename, size, uploaded timestamp) and persist a model record in Firestore.
+
+Support a progress callback for real-time progress UI.
+
+Handle errors with clear messages.
+
+Upload component and page
+
+Build a drag-and-drop uploader for .glb and .gltf with size/type validation, progress bar, and toast notifications.
+
+On success, expose the uploaded URL and model metadata to the page.
+
+Link to “Share this model” after a successful upload.
+
+3D preview with model-viewer
+
+Create a preview component that renders a given model URL using @google/model-viewer.
+
+Enable orbit controls and AR support with ar and ar-modes="webxr scene-viewer quick-look".
+
+Show a loading indicator until the model is ready.
+
+Simulated validation pipeline
+
+Implement a validation service that simulates stages: file-integrity, format-validation (GLB/GLTF), AR compatibility.
+
+Return a status (processing, ready, or failed) with any issues/warnings.
+
+Integrate this into the upload flow and show status badges and issue lists on the Upload page and Dashboard model list.
+
+Sharing data model
+
+Define a type/interface for a shared link: id, modelUrl, createdAt, expiresAt, isActive, and qrOptions (colors, logo, error correction level).
+
+Decide on a Firestore collection for shared links and set indexes if needed.
+
+Share link and QR services
+
+Implement functions to create a shared link (with expiration), list links, revoke a link, extend expiration, and build a public share URL.
+
+Implement a QR helper that generates a QR for a given URL with customizable colors, optional logo, and error correction level; support PNG download via html2canvas or canvas export.
+
+Share UI
+
+Build a Share Modal with tabs: Direct Link, QR Code, Embed.
+
+Allow users to generate a new share link for a model, customize the QR code style, copy the link, download the QR image, and get embed code.
+
+Persist share metadata and QR settings to Firestore.
+
+Share Manager page
+
+List all shared links with status (active/expired), expiration time, QR preview thumbnail, and actions (extend, revoke, open).
+
+Show simple activity columns (views, scans) as placeholders for now.
+
+Mobile AR Viewer page
+
+Implement a mobile-first AR viewer page that accepts ?id= (shared link id) or ?url= (direct model URL).
+
+If id is present, resolve to the model URL using Firestore; if url is present, use it directly.
+
+Render the model with model-viewer in AR mode, minimal UI, and a loading overlay.
+
+If the page was opened via QR (?source=qr), show a toast “Opened via QR scan”.
+
+Reuse preview component for AR
+
+Extend the preview component to accept props toggling AR, camera controls, and auto-rotate so it can serve both desktop preview and mobile AR contexts.
+
+Analytics service (initial)
+
+Implement functions to compute totals from Firestore: count of model records, count of active shared links, and placeholder counts for QR scans and AR sessions.
+
+Implement a function to fetch recent activity (recent uploads and shares) for a timeline list.
+
+Analytics UI
+
+Build analytics cards for totals (Models, Active Links, QR Scans, AR Sessions).
+
+Add a chart (Recharts) for activity over time (uploads/shares), and a list for recent events.
+
+Fetch data via React Query from the analytics service.
+
+Security rules and configuration (frontend-side handoff)
+
+Provide a basic firestore.rules concept: users can manage their own model and share documents; shared links are readable publicly only when active.
+
+Document how the public AR viewer reads a shared link by id.
+
+(No deployment of rules here; just ensure the app is structured to support this.)
+
+Optional Cloud Functions scaffolding (no implementation required now)
+
+Outline a future /functions folder with TypeScript for:
+
+generateQRCode (server-side QR rendering and storage),
+
+trackQRAccess (increment counters),
+
+cleanupExpiredLinks (scheduled job).
+
+Note how these would integrate with Firestore and Storage, and how a future firebase.json would host the app and route APIs.
+
+Keep current implementation frontend-only; just ensure code is written to easily adopt server endpoints later.
+
+Polish and UX
+
+Add global toasts provider, success/error feedback everywhere network operations occur, and friendly empty states.
+
+Make the layout responsive and keyboard-accessible; ensure contrast is sufficient for QR colors defaults.
+
+Provide dark mode toggle (optional).
+
+Confirm the app runs with npm run dev, that uploading, previewing, sharing, and viewing in AR all work end-to-end using Firebase services and model-viewer.
