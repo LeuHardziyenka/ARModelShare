@@ -3,6 +3,66 @@ import { supabase } from '../db';
 import { requireAuth } from '../middleware/auth';
 
 export function registerModelRoutes(app: Express) {
+  // IMPORTANT: Specific routes must come BEFORE parameterized routes
+  // Otherwise Express will match '/recent' and '/count' as ':id' parameter
+
+  // Get recent models with pagination
+  app.get('/api/models/recent', requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const limit = parseInt(req.query.limit as string) || 6;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const { data, error } = await supabase
+        .from('models')
+        .select('*')
+        .eq('user_id', userId)
+        .order('uploaded_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        return res.status(400).json({ message: `Failed to get models: ${error.message}` });
+      }
+
+      const models = (data || []).map(item => ({
+        id: item.id,
+        userId: item.user_id,
+        filename: item.filename,
+        fileSize: item.file_size,
+        modelUrl: item.model_url,
+        validationStatus: item.validation_status,
+        validationIssues: item.validation_issues,
+        uploadedAt: item.uploaded_at,
+      }));
+
+      return res.json(models);
+    } catch (error: any) {
+      console.error('Get recent models error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Count user models
+  app.get('/api/models/count', requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+
+      const { count, error } = await supabase
+        .from('models')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      if (error) {
+        return res.status(400).json({ message: `Failed to count models: ${error.message}` });
+      }
+
+      return res.json({ count: count || 0 });
+    } catch (error: any) {
+      console.error('Count models error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Create a new model record
   app.post('/api/models', requireAuth, async (req, res) => {
     try {
@@ -45,37 +105,6 @@ export function registerModelRoutes(app: Express) {
     }
   });
 
-  // Get model by ID
-  app.get('/api/models/:id', requireAuth, async (req, res) => {
-    try {
-      const { id } = req.params;
-
-      const { data, error } = await supabase
-        .from('models')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error || !data) {
-        return res.status(404).json({ message: 'Model not found' });
-      }
-
-      return res.json({
-        id: data.id,
-        userId: data.user_id,
-        filename: data.filename,
-        fileSize: data.file_size,
-        modelUrl: data.model_url,
-        validationStatus: data.validation_status,
-        validationIssues: data.validation_issues,
-        uploadedAt: data.uploaded_at,
-      });
-    } catch (error: any) {
-      console.error('Get model error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-
   // Get all models for a user
   app.get('/api/models', requireAuth, async (req, res) => {
     try {
@@ -109,38 +138,33 @@ export function registerModelRoutes(app: Express) {
     }
   });
 
-  // Get recent models with pagination
-  app.get('/api/models/recent', requireAuth, async (req, res) => {
+  // Get model by ID
+  app.get('/api/models/:id', requireAuth, async (req, res) => {
     try {
-      const userId = req.user!.id;
-      const limit = parseInt(req.query.limit as string) || 6;
-      const offset = parseInt(req.query.offset as string) || 0;
+      const { id } = req.params;
 
       const { data, error } = await supabase
         .from('models')
         .select('*')
-        .eq('user_id', userId)
-        .order('uploaded_at', { ascending: false })
-        .range(offset, offset + limit - 1);
+        .eq('id', id)
+        .single();
 
-      if (error) {
-        return res.status(400).json({ message: `Failed to get models: ${error.message}` });
+      if (error || !data) {
+        return res.status(404).json({ message: 'Model not found' });
       }
 
-      const models = (data || []).map(item => ({
-        id: item.id,
-        userId: item.user_id,
-        filename: item.filename,
-        fileSize: item.file_size,
-        modelUrl: item.model_url,
-        validationStatus: item.validation_status,
-        validationIssues: item.validation_issues,
-        uploadedAt: item.uploaded_at,
-      }));
-
-      return res.json(models);
+      return res.json({
+        id: data.id,
+        userId: data.user_id,
+        filename: data.filename,
+        fileSize: data.file_size,
+        modelUrl: data.model_url,
+        validationStatus: data.validation_status,
+        validationIssues: data.validation_issues,
+        uploadedAt: data.uploaded_at,
+      });
     } catch (error: any) {
-      console.error('Get recent models error:', error);
+      console.error('Get model error:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -224,27 +248,6 @@ export function registerModelRoutes(app: Express) {
       });
     } catch (error: any) {
       console.error('Delete model error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-
-  // Count user models
-  app.get('/api/models/count', requireAuth, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-
-      const { count, error } = await supabase
-        .from('models')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
-
-      if (error) {
-        return res.status(400).json({ message: `Failed to count models: ${error.message}` });
-      }
-
-      return res.json({ count: count || 0 });
-    } catch (error: any) {
-      console.error('Count models error:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   });
