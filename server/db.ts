@@ -1,3 +1,5 @@
+// IMPORTANT: Import env first to ensure variables are loaded
+import './env.js';
 import { createClient } from '@supabase/supabase-js';
 
 // Backend uses non-VITE prefixed variables (VITE_ prefix is only for frontend/Vite)

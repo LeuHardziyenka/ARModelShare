@@ -1,18 +1,5 @@
 // Load environment variables FIRST before any other imports
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// Get the directory name in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load .env from project root (one level up from server/)
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
-
-// Debug: Log what we loaded
-console.log('Environment loaded from:', path.resolve(__dirname, '../.env'));
-console.log('Available env vars:', Object.keys(process.env).filter(k => k.includes('SUPABASE') || k === 'PORT'));
+import './env.js';
 
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
