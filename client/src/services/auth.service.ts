@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabase';
 import type { UserProfile } from '@/types';
 import type { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 
+// Note: Auth is still handled by Supabase client-side for session management
+// The backend validates tokens but doesn't manage sessions
 export const authService = {
   // Sign up with email and password
   async signUpWithEmail(email: string, password: string): Promise<UserProfile> {
