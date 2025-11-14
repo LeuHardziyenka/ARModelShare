@@ -112,7 +112,7 @@ fi
 echo -e "${GREEN}✓ Frontend build variables loaded${NC}\n"
 
 # Step 7: Deploy using Cloud Build
-echo -e "${YELLOW}[7/7] Starting Cloud Build deployment...${NC}"
+echo -e "${YELLOW}[7/9] Starting Cloud Build deployment...${NC}"
 echo -e "${BLUE}This will:${NC}"
 echo -e "  1. Build Docker image with Vite frontend and Express backend"
 echo -e "  2. Push to Google Container Registry"
@@ -130,8 +130,19 @@ _MIN_INSTANCES="0",\
 _MAX_INSTANCES="10" \
     --project="$PROJECT_ID"
 
-# Step 8: Get the service URL
-echo -e "\n${YELLOW}Fetching service URL...${NC}"
+# Step 8: Make service publicly accessible
+echo -e "\n${YELLOW}[8/9] Making service publicly accessible...${NC}"
+gcloud run services add-iam-policy-binding "$SERVICE_NAME" \
+    --region="$REGION" \
+    --member=allUsers \
+    --role=roles/run.invoker \
+    --project="$PROJECT_ID" \
+    --quiet
+
+echo -e "${GREEN}✓ Service is now publicly accessible${NC}\n"
+
+# Step 9: Get the service URL
+echo -e "${YELLOW}[9/9] Fetching service URL...${NC}"
 SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" \
     --region="$REGION" \
     --project="$PROJECT_ID" \
