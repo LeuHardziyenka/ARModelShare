@@ -19,8 +19,6 @@ if (result.error) {
   process.exit(1);
 }
 
-console.log('✅ Environment loaded from:', envPath);
-
 // Validate required environment variables
 const requiredVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY'];
 const missingVars = requiredVars.filter(v => !process.env[v] || process.env[v] === 'your_service_role_key_here');
@@ -31,11 +29,6 @@ if (missingVars.length > 0) {
   missingVars.forEach(v => console.error(`  - ${v}`));
   process.exit(1);
 }
-
-console.log('✅ All required environment variables are set');
-console.log('   - SUPABASE_URL:', process.env.SUPABASE_URL);
-console.log('   - SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? '[HIDDEN]' : 'NOT SET');
-console.log('   - PORT:', process.env.PORT || '5000');
 
 // Export for convenience
 export const env = {
