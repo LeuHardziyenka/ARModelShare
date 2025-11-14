@@ -3,7 +3,7 @@ import './env.js';
 
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { log, serveStatic } from "./utils.js";
 
 const app = express();
 
@@ -63,9 +63,17 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  log(`Environment: NODE_ENV=${nodeEnv}, app.env=${app.get("env")}`);
+
+  if (nodeEnv !== "production") {
+    log("Development mode: loading Vite dev server");
+    // Dynamic import to avoid loading vite in production
+    const { setupVite } = await import("./vite.js");
     await setupVite(app, server);
   } else {
+    log("Production mode: serving static files");
+    // Production: serve static files (no vite dependency)
     serveStatic(app);
   }
 

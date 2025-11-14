@@ -1,0 +1,62 @@
+# Dependencies
+node_modules
+npm-debug.log
+# NOTE: package-lock.json is REQUIRED for npm ci - do NOT exclude it
+
+# Environment files - CRITICAL: Never include in Docker image
+.env
+.env.*
+!.env.example
+
+# Build outputs (will be generated during Docker build)
+dist
+*.log
+
+# Git
+.git
+.gitignore
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation
+README.md
+*.md
+!MIGRATION_GUIDE.md
+design_guidelines.md
+
+# Replit-specific
+.replit
+replit.md
+.local
+
+# Claude Code
+.claude
+claudedocs
+
+# Test and coverage
+coverage
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+
+# Misc
+.cache
+tmp
+temp
+attached_assets
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
