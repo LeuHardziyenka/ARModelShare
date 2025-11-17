@@ -9,7 +9,7 @@ terraform {
   }
 
   backend "gcs" {
-    bucket = "armodelshare-terraform-state"
+    bucket = "armodelshare-478207-terraform-state"
     prefix = "terraform/state"
   }
 }
