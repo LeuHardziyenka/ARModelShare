@@ -216,6 +216,8 @@ export function registerModelRoutes(app: Express) {
       const { id } = req.params;
       const userId = req.user!.id;
 
+      console.log(`[Model Delete] Starting deletion - Model ID: ${id}, User ID: ${userId}`);
+
       // Get model to verify ownership and get storage URL
       const { data: model, error: fetchError } = await supabase
         .from('models')
@@ -224,12 +226,16 @@ export function registerModelRoutes(app: Express) {
         .single();
 
       if (fetchError || !model) {
+        console.log(`[Model Delete] Model not found - ID: ${id}`);
         return res.status(404).json({ message: 'Model not found' });
       }
 
       if (model.user_id !== userId) {
+        console.log(`[Model Delete] Access denied - Model owner: ${model.user_id}, Requesting user: ${userId}`);
         return res.status(403).json({ message: 'Forbidden' });
       }
+
+      console.log(`[Model Delete] Deleting model from database - Filename: ${model.filename}, URL: ${model.model_url}`);
 
       // Delete from database
       const { error } = await supabase
@@ -238,8 +244,11 @@ export function registerModelRoutes(app: Express) {
         .eq('id', id);
 
       if (error) {
+        console.error(`[Model Delete] Database deletion failed - Model ID: ${id}, Error:`, error);
         return res.status(400).json({ message: `Failed to delete model: ${error.message}` });
       }
+
+      console.log(`[Model Delete] ✓ Successfully deleted model - ID: ${id}, Filename: ${model.filename}`);
 
       // Return model URL for frontend to handle storage deletion
       return res.json({
@@ -247,7 +256,7 @@ export function registerModelRoutes(app: Express) {
         modelUrl: model.model_url
       });
     } catch (error: any) {
-      console.error('Delete model error:', error);
+      console.error('[Model Delete] Unexpected error:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   });

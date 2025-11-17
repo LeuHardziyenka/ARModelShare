@@ -1,4 +1,4 @@
-import { Upload, Share2, Eye, Scan } from 'lucide-react';
+import { Upload, Share2, Eye, Scan, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ActivityEvent } from '@/types';
 
@@ -17,6 +17,8 @@ export function ActivityTimeline({ events }: ActivityTimelineProps) {
         return <Eye className="h-4 w-4" />;
       case 'scan':
         return <Scan className="h-4 w-4" />;
+      case 'delete':
+        return <Trash2 className="h-4 w-4 text-destructive" />;
     }
   };
 

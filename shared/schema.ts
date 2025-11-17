@@ -96,7 +96,7 @@ export const monthlyStatsSchema = z.object({
 
 export const activityEventSchema = z.object({
   id: z.string(),
-  type: z.enum(['upload', 'share', 'view', 'scan']),
+  type: z.enum(['upload', 'share', 'view', 'scan', 'delete']),
   timestamp: z.number(),
   description: z.string(),
   metadata: z.record(z.any()).optional(),

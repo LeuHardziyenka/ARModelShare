@@ -149,6 +149,8 @@ export function registerAnalyticsRoutes(app: Express) {
       const { type, description, metadata } = req.body;
       const userId = req.user!.id;
 
+      console.log(`[Activity Log] Logging activity - User: ${userId}, Type: ${type}, Description: ${description}`);
+
       const event = {
         user_id: userId,
         type,
@@ -157,17 +159,20 @@ export function registerAnalyticsRoutes(app: Express) {
         metadata: metadata || {},
       };
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('activity')
-        .insert([event]);
+        .insert([event])
+        .select();
 
       if (error) {
+        console.error(`[Activity Log] ❌ Failed to insert activity - Type: ${type}, Error:`, error);
         return res.status(400).json({ message: `Failed to log activity: ${error.message}` });
       }
 
-      return res.json({ message: 'Activity logged successfully' });
+      console.log(`[Activity Log] ✓ Successfully logged activity - ID: ${data[0]?.id}, Type: ${type}`);
+      return res.json({ message: 'Activity logged successfully', id: data[0]?.id });
     } catch (error: any) {
-      console.error('Log activity error:', error);
+      console.error('[Activity Log] Unexpected error:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   });

@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS shared_links (
 CREATE TABLE IF NOT EXISTS activity (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('upload', 'share', 'view', 'scan')),
+  type TEXT NOT NULL CHECK (type IN ('upload', 'share', 'view', 'scan', 'delete')),
   description TEXT NOT NULL,
   timestamp BIGINT NOT NULL,
   metadata JSONB DEFAULT '{}'::jsonb,
