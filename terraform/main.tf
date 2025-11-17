@@ -19,21 +19,12 @@ provider "google" {
   region  = var.region
 }
 
-# Enable required Google Cloud APIs
-resource "google_project_service" "required_apis" {
-  for_each = toset([
-    "cloudbuild.googleapis.com",
-    "run.googleapis.com",
-    "containerregistry.googleapis.com",
-    "secretmanager.googleapis.com",
-    "storage.googleapis.com",
-  ])
-
-  project = var.project_id
-  service = each.key
-
-  disable_on_destroy = false
-}
+# Note: Required APIs are assumed to be already enabled
+# If you need to enable them manually, run:
+# gcloud services enable cloudbuild.googleapis.com run.googleapis.com \
+#   containerregistry.googleapis.com secretmanager.googleapis.com \
+#   storage.googleapis.com cloudresourcemanager.googleapis.com \
+#   --project=armodelshare-478207
 
 # GCS bucket for ARModel storage
 resource "google_storage_bucket" "armodel_storage" {
@@ -50,27 +41,19 @@ resource "google_storage_bucket" "armodel_storage" {
       age = 365
     }
   }
-
-  depends_on = [google_project_service.required_apis]
 }
 
 # Reference existing Secret Manager secrets (created manually)
 data "google_secret_manager_secret" "supabase_url" {
   secret_id = "SUPABASE_URL"
-
-  depends_on = [google_project_service.required_apis]
 }
 
 data "google_secret_manager_secret" "supabase_service_key" {
   secret_id = "SUPABASE_SERVICE_KEY"
-
-  depends_on = [google_project_service.required_apis]
 }
 
 data "google_secret_manager_secret" "supabase_anon_key" {
   secret_id = "SUPABASE_ANON_KEY"
-
-  depends_on = [google_project_service.required_apis]
 }
 
 # Use the default Compute Engine service account for Cloud Run
@@ -186,7 +169,6 @@ resource "google_cloud_run_v2_service" "armodelshare" {
   }
 
   depends_on = [
-    google_project_service.required_apis,
     google_secret_manager_secret_iam_member.supabase_url_access,
     google_secret_manager_secret_iam_member.supabase_service_key_access,
     google_secret_manager_secret_iam_member.supabase_anon_key_access,
