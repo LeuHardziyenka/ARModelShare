@@ -96,7 +96,10 @@ export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
             <Box className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h2 className="font-bold text-lg">AR Models</h2>
+            <h2 className="font-bold text-lg">
+              AR Models{' '}
+              <span className="text-xs text-gray-400 font-normal">(version 2.0.0)</span>
+            </h2>
             <p className="text-xs text-muted-foreground">Share in 3D</p>
           </div>
         </div>
