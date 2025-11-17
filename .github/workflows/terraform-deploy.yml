@@ -77,13 +77,22 @@ jobs:
       - name: Import Existing Cloud Run Service
         working-directory: ./terraform
         run: |
-          # Try to import existing Cloud Run service into Terraform state
-          # This will fail gracefully if already imported or if service doesn't exist
-          terraform import \
-            -var="container_image=gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}" \
-            google_cloud_run_v2_service.armodelshare \
-            projects/${{ env.PROJECT_ID }}/locations/${{ env.REGION }}/services/${{ env.SERVICE_NAME }} \
-            || echo "Service already imported or doesn't exist, continuing..."
+          echo "Checking if Cloud Run service needs to be imported..."
+
+          # Check if resource is already in Terraform state
+          if terraform state show google_cloud_run_v2_service.armodelshare &>/dev/null; then
+            echo "✓ Cloud Run service already managed by Terraform, skipping import"
+          else
+            echo "Importing existing Cloud Run service into Terraform state..."
+            if terraform import \
+              -var="container_image=gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}" \
+              google_cloud_run_v2_service.armodelshare \
+              projects/${{ env.PROJECT_ID }}/locations/${{ env.REGION }}/services/${{ env.SERVICE_NAME }} 2>&1; then
+              echo "✓ Successfully imported Cloud Run service"
+            else
+              echo "⚠ Import failed (service may not exist yet, will be created)"
+            fi
+          fi
 
       - name: Terraform Plan
         working-directory: ./terraform
