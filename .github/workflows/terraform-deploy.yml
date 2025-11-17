@@ -74,6 +74,17 @@ jobs:
         working-directory: ./terraform
         run: terraform validate
 
+      - name: Import Existing Cloud Run Service
+        working-directory: ./terraform
+        run: |
+          # Try to import existing Cloud Run service into Terraform state
+          # This will fail gracefully if already imported or if service doesn't exist
+          terraform import \
+            -var="container_image=gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}" \
+            google_cloud_run_v2_service.armodelshare \
+            projects/${{ env.PROJECT_ID }}/locations/${{ env.REGION }}/services/${{ env.SERVICE_NAME }} \
+            || echo "Service already imported or doesn't exist, continuing..."
+
       - name: Terraform Plan
         working-directory: ./terraform
         run: |
