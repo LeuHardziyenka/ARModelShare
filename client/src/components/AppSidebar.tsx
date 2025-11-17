@@ -98,7 +98,7 @@ export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
           <div>
             <h2 className="font-bold text-lg">
               AR Models{' '}
-              <span className="text-xs text-gray-400 font-normal">(version 2.0.0)</span>
+              <span className="text-xs text-gray-400 font-normal">(version 2.0.1)</span>
             </h2>
             <p className="text-xs text-muted-foreground">Share in 3D</p>
           </div>

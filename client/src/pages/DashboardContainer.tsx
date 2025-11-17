@@ -109,17 +109,59 @@ export default function DashboardContainer() {
   // Delete model mutation
   const deleteModelMutation = useMutation({
     mutationFn: async (modelId: string) => {
+      console.log('[Dashboard] Starting model deletion:', modelId);
       // Inactivate all related share links first
       await shareService.inactivateModelLinks(modelId);
+      console.log('[Dashboard] Inactivated share links for model:', modelId);
       // Then delete the model (which also deletes storage files)
       await modelService.deleteModel(modelId);
+      console.log('[Dashboard] Successfully deleted model:', modelId);
+      return modelId;
     },
-    onSuccess: () => {
-      // Invalidate all related queries
-      queryClient.invalidateQueries({ queryKey: ['/api/models'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/shares'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/analytics'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/storage'] });
+    onSuccess: async (modelId) => {
+      console.log('[Dashboard] Delete mutation success, logging activity...');
+
+      // Log activity for the deletion FIRST, then invalidate
+      if (user?.uid && modelToDelete) {
+        try {
+          console.log('[Dashboard] Calling logActivity with:', {
+            userId: user.uid,
+            type: 'delete',
+            filename: modelToDelete.filename,
+          });
+
+          await analyticsService.logActivity(
+            user.uid,
+            'delete',
+            `Deleted model "${modelToDelete.filename}"`,
+            { modelId, filename: modelToDelete.filename }
+          );
+
+          console.log('[Dashboard] ✓ Activity logged successfully');
+        } catch (error) {
+          console.error('[Dashboard] ❌ Failed to log activity:', error);
+        }
+      } else {
+        console.warn('[Dashboard] ⚠️ Cannot log activity - missing user or modelToDelete');
+      }
+
+      // Small delay to ensure activity is saved before invalidating
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      console.log('[Dashboard] Invalidating all queries...');
+
+      // Invalidate all related queries with specific keys
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/models/recent', user?.uid] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/models/count', user?.uid] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/shares/recent', user?.uid] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/shares/count', user?.uid] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/analytics/stats', user?.uid] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/storage/usage', user?.uid] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/activity/recent', user?.uid] }),
+      ]);
+
+      console.log('[Dashboard] ✓ All queries invalidated, UI should refresh now');
 
       toast({
         title: 'Model deleted',
@@ -127,6 +169,7 @@ export default function DashboardContainer() {
       });
     },
     onError: (error: Error) => {
+      console.error('[Dashboard] Delete mutation failed:', error);
       toast({
         title: 'Delete failed',
         description: error.message || 'Failed to delete model',
