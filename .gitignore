@@ -9,3 +9,15 @@ vite.config.ts.*
 .env
 .env.local
 .env.*.local
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.*
+terraform/*.tfvars
+!terraform/terraform.tfvars.example
+
+# GCP Service Account Keys
+github-actions-key.json
+*-key.json
