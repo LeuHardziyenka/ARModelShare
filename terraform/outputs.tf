@@ -15,5 +15,5 @@ output "storage_bucket_name" {
 
 output "service_account_email" {
   description = "The email of the Cloud Run service account"
-  value       = google_service_account.cloud_run_sa.email
+  value       = local.cloud_run_sa_email
 }

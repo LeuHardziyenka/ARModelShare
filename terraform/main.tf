@@ -54,68 +54,60 @@ resource "google_storage_bucket" "armodel_storage" {
   depends_on = [google_project_service.required_apis]
 }
 
-# Secret Manager secrets (values must be set manually or via CI/CD)
-resource "google_secret_manager_secret" "supabase_url" {
+# Reference existing Secret Manager secrets (created manually)
+data "google_secret_manager_secret" "supabase_url" {
   secret_id = "SUPABASE_URL"
 
-  replication {
-    auto {}
-  }
-
   depends_on = [google_project_service.required_apis]
 }
 
-resource "google_secret_manager_secret" "supabase_service_key" {
+data "google_secret_manager_secret" "supabase_service_key" {
   secret_id = "SUPABASE_SERVICE_KEY"
 
-  replication {
-    auto {}
-  }
-
   depends_on = [google_project_service.required_apis]
 }
 
-resource "google_secret_manager_secret" "supabase_anon_key" {
+data "google_secret_manager_secret" "supabase_anon_key" {
   secret_id = "SUPABASE_ANON_KEY"
 
-  replication {
-    auto {}
-  }
-
   depends_on = [google_project_service.required_apis]
 }
 
-# Service account for Cloud Run
-resource "google_service_account" "cloud_run_sa" {
-  account_id   = "armodelshare-run-sa"
-  display_name = "ARModelShare Cloud Run Service Account"
-  description  = "Service account for ARModelShare Cloud Run service"
+# Use the default Compute Engine service account for Cloud Run
+# This service account is automatically created and has necessary permissions
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+locals {
+  # Default Compute Engine service account
+  cloud_run_sa_email = "${data.google_project.project.number}-compute@developer.gserviceaccount.com"
 }
 
 # Grant Cloud Run service account access to secrets
 resource "google_secret_manager_secret_iam_member" "supabase_url_access" {
-  secret_id = google_secret_manager_secret.supabase_url.id
+  secret_id = data.google_secret_manager_secret.supabase_url.secret_id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+  member    = "serviceAccount:${local.cloud_run_sa_email}"
 }
 
 resource "google_secret_manager_secret_iam_member" "supabase_service_key_access" {
-  secret_id = google_secret_manager_secret.supabase_service_key.id
+  secret_id = data.google_secret_manager_secret.supabase_service_key.secret_id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+  member    = "serviceAccount:${local.cloud_run_sa_email}"
 }
 
 resource "google_secret_manager_secret_iam_member" "supabase_anon_key_access" {
-  secret_id = google_secret_manager_secret.supabase_anon_key.id
+  secret_id = data.google_secret_manager_secret.supabase_anon_key.secret_id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+  member    = "serviceAccount:${local.cloud_run_sa_email}"
 }
 
 # Grant Cloud Run service account access to storage bucket
 resource "google_storage_bucket_iam_member" "cloud_run_storage_access" {
   bucket = google_storage_bucket.armodel_storage.name
   role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${google_service_account.cloud_run_sa.email}"
+  member = "serviceAccount:${local.cloud_run_sa_email}"
 }
 
 # Cloud Run service
@@ -125,7 +117,7 @@ resource "google_cloud_run_v2_service" "armodelshare" {
   ingress  = "INGRESS_TRAFFIC_ALL"
 
   template {
-    service_account = google_service_account.cloud_run_sa.email
+    service_account = local.cloud_run_sa_email
 
     scaling {
       min_instance_count = var.min_instances
@@ -155,7 +147,7 @@ resource "google_cloud_run_v2_service" "armodelshare" {
         name = "SUPABASE_URL"
         value_source {
           secret_key_ref {
-            secret  = google_secret_manager_secret.supabase_url.secret_id
+            secret  = data.google_secret_manager_secret.supabase_url.secret_id
             version = "latest"
           }
         }
@@ -165,7 +157,7 @@ resource "google_cloud_run_v2_service" "armodelshare" {
         name = "SUPABASE_SERVICE_KEY"
         value_source {
           secret_key_ref {
-            secret  = google_secret_manager_secret.supabase_service_key.secret_id
+            secret  = data.google_secret_manager_secret.supabase_service_key.secret_id
             version = "latest"
           }
         }
@@ -175,7 +167,7 @@ resource "google_cloud_run_v2_service" "armodelshare" {
         name = "SUPABASE_ANON_KEY"
         value_source {
           secret_key_ref {
-            secret  = google_secret_manager_secret.supabase_anon_key.secret_id
+            secret  = data.google_secret_manager_secret.supabase_anon_key.secret_id
             version = "latest"
           }
         }
